@@ -93,6 +93,13 @@ if(!file.exists(myfn)) {
     annotation(x) <- "hgu133a"
     return (x)
   }, y=gl)
+  
+  data.ge2 <- lapply(data.ge, function (x, y) {
+    x <- x[rownames(gl), ]
+    fData(x) <- gl
+    annotation(x) <- "hgu133a"
+    return (x)
+  }, y=gl)
 
   ## quantile normalization between hgu133a and hgu133plus2
   tt <- apply(Biobase::exprs(data.ge2[["HG-U133A"]]), 2, sort, method="quick")
