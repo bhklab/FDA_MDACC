@@ -118,40 +118,40 @@ if(!file.exists(myfn)) {
   load(myfn)
 }
 
-########################
-## clustering
-########################
-
-myfn <- sprintf("%s_merged_clustering.%s", file_path_sans_ext(dataset.fn), file_ext(dataset.fn))
-if(!file.exists(myfn)) {
-  hcl <- pvcl <- NULL
-  
-  ## select genes using sparse pca
-  spc1 <- elasticnet::arrayspc(x=t(exprs(data.ge3)), K=1, para=1e4)
-  myx <- abs(spc1$loadings) > 1e-2
-  # myx <- order(abs(spc1$loadings), decreasing=TRUE)[1:500]
-  genes <- featureNames(data.ge3)[myx]
-
-  ## clustering using hclust
-  hcl <- amap::hcluster(x=t(exprs(data.ge3)[genes, , drop=FALSE]), link="complete", method="correlation")
-  hcl.k2 <- cutree(hcl, k=2)
-  table("CHIPTYPE"=chipt[names(hcl.k2)], "HCLUST2"=hcl.k2)
-  
-  pdf(file.path(saveres, "hclust_spca_ge_all.pdf"), width=35)
-  plot(hcl)
-  dev.off()
-  
-  ## clustering using pvclust
-  pvcl <- pvclust::pvclust(data=exprs(data.ge3)[genes, , drop=FALSE], method.hclust="complete", method.dist="correlation", use.cor="pairwise.complete.obs", nboot=1000, r=1, store=FALSE)
-
-  pdf(file.path(saveres, "hclust_spca_ge_all.pdf"), width=35)
-  plot(pvcl)
-  dev.off()
-
-  save(list=c("hcl", "pvcl"), compress=TRUE, file=myfn)
-} else {
-  load(myfn)
-}
+# ########################
+# ## clustering
+# ########################
+#
+# myfn <- sprintf("%s_merged_clustering.%s", file_path_sans_ext(dataset.fn), file_ext(dataset.fn))
+# if(!file.exists(myfn)) {
+#   hcl <- pvcl <- NULL
+#
+#   ## select genes using sparse pca
+#   spc1 <- elasticnet::arrayspc(x=t(exprs(data.ge3)), K=1, para=1e4)
+#   myx <- abs(spc1$loadings) > 1e-2
+#   # myx <- order(abs(spc1$loadings), decreasing=TRUE)[1:500]
+#   genes <- featureNames(data.ge3)[myx]
+#
+#   ## clustering using hclust
+#   hcl <- amap::hcluster(x=t(exprs(data.ge3)[genes, , drop=FALSE]), link="complete", method="correlation")
+#   hcl.k2 <- cutree(hcl, k=2)
+#   table("CHIPTYPE"=chipt[names(hcl.k2)], "HCLUST2"=hcl.k2)
+#
+#   pdf(file.path(saveres, "hclust_spca_ge_all.pdf"), width=35)
+#   plot(hcl)
+#   dev.off()
+#
+#   ## clustering using pvclust
+#   pvcl <- pvclust::pvclust(data=exprs(data.ge3)[genes, , drop=FALSE], method.hclust="complete", method.dist="correlation", use.cor="pairwise.complete.obs", nboot=1000, r=1, store=FALSE)
+#
+#   pdf(file.path(saveres, "hclust_spca_ge_all.pdf"), width=35)
+#   plot(pvcl)
+#   dev.off()
+#
+#   save(list=c("hcl", "pvcl"), compress=TRUE, file=myfn)
+# } else {
+#   load(myfn)
+# }
 
 
 ## end

@@ -17,12 +17,22 @@ res.scores <- res.risks <- data.frame(matrix(paste(sampleNames(data.ge3), "CEL",
 ## GGI
 ##############
 sig.name <- "GGI"
-## without histological grade, only continuous score can be computed
+### ER status by mRNA
+er.status <- genefu::bimod(x=mod1$ESR1[1 ,], data=t(exprs(data.ge3)), annot=fData(data.ge3), do.mapping=FALSE, model="V", do.scale=FALSE)$status
+### compute GGI for ER+
+sig <- genefu::ggi(data=t(exprs(data.ge3[ , er.status == 1])), annot=fData(data.ge3), do.mapping=FALSE)
+### rescale GGI
+q <- 0.05
+ma <- quantile(sig$score, probs = 1 - (q/2), na.rm = TRUE)
+mi <- quantile(sig$score, probs = q/2, na.rm = TRUE)
+### compute GGI for all patients
 sig <- genefu::ggi(data=t(exprs(data.ge3)), annot=fData(data.ge3), do.mapping=FALSE)
-## rescale value between 0 and 1
-sig$score <- genefu::rescale(sig$score, na.rm=TRUE, q=0.05)
+### rescale GGI scores
+sig$score <-  (sig$score - mi)/(ma - mi)
 sig$score[!is.na(sig$score) & sig$score < 0] <- 0
 sig$score[!is.na(sig$score) & sig$score > 1] <- 1
+sig$risk <- as.numeric(sig$score > ggi.erp.rescale.cutoff)
+names(sig$risk) <- names(sig$score)
 
 res.scores <- cbind(res.scores, NA)
 res.scores[names(sig$score), ncol(res.scores)] <- sig$score
@@ -69,13 +79,25 @@ sig <- NULL
 ## PIK3CASIG
 ##############
 sig.name <- "PIK3CASIG"
+
+### select luminals
+sbt <- molecular.subtyping(sbt.model="scmod1", data=t(exprs(data.ge3)), annot=fData(data.ge3), do.mapping=FALSE)
+iix <- !is.na(sbt$subtype) & (is.element(sbt$subtype, c("ER+/HER2- High Prolif", "ER+/HER2- Low Prolif")))
+
+### compute PI3KCASIG for luminals
+sig$score <- genefu::pik3cags(data=t(exprs(data.ge3[ , iix])), annot=fData(data.ge3), do.mapping=FALSE)
+### rescale PI3KCASIG
+q <- 0.05
+ma <- quantile(sig$score, probs = 1 - (q/2), na.rm = TRUE)
+mi <- quantile(sig$score, probs = q/2, na.rm = TRUE)
+### compute GGI for all patients
 sig$score <- genefu::pik3cags(data=t(exprs(data.ge3)), annot=fData(data.ge3), do.mapping=FALSE)
-sig$risk <- rep(NA, length(sig$score))
-names(sig$risk) <- names(sig$score)
-## rescale value between 0 and 1
-sig$score <- genefu::rescale(sig$score, na.rm=TRUE, q=0.05)
+### rescale PI3KCASIG scores
+sig$score <-  (sig$score - mi)/(ma - mi)
 sig$score[!is.na(sig$score) & sig$score < 0] <- 0
 sig$score[!is.na(sig$score) & sig$score > 1] <- 1
+sig$risk <- as.numeric(sig$score > pi3kcasig.lum.rescale.cutoff)
+names(sig$risk) <- names(sig$score)
 
 res.scores <- cbind(res.scores, NA)
 res.scores[names(sig$score), ncol(res.scores)] <- sig$score
@@ -83,7 +105,6 @@ res.risks <- cbind(res.risks, NA)
 res.risks[names(sig$risk), ncol(res.risks)] <- sig$risk
 colnames(res.scores)[ncol(res.scores)] <- colnames(res.risks)[ncol(res.risks)] <- sig.name
 sig <- NULL
-
 
 ########################
 ## Gene modules from Desmedt et al, CCR 2008
@@ -98,7 +119,10 @@ for (i in 1:length(genefu::mod1)) {
   sig$score <- genefu::rescale(sig$score, na.rm=TRUE, q=0.05)
   sig$score[!is.na(sig$score) & sig$score < 0] <- 0
   sig$score[!is.na(sig$score) & sig$score > 1] <- 1
-
+  ## fit a mixture of 2 gaussians for binarization
+  rr2 <- mclust::Mclust(data = sig$score, modelNames = "V", G = 2)
+  sig$risk <- rr2$classification - 1
+  
   res.scores <- cbind(res.scores, NA)
   res.scores[names(sig$score), ncol(res.scores)] <- sig$score
   res.risks <- cbind(res.risks, NA)
@@ -241,7 +265,7 @@ sig <- NULL
 
 res.all <- NULL
 for (i in 2:length(res.scores)) {
-  rr <- data.frame(res.scores[ , 1], res.scores[ , i], res.risks[ , i])
+  rr <- data.frame(res.scores[ , 1], res.risks[ , i], res.scores[ , i])
   dimnames(rr) <- list(rownames(res.scores), c("CEL_File_Name", "Prediction_Binary", "Prediction_Continuous"))
   res.all <- c(res.all, list(rr))
 }

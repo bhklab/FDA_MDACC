@@ -53,7 +53,7 @@ rawpath <- "/mnt/work1/users/bhklab/Data/FDA/MDACC2"
 ## note that the files have been compressed using gzip (.CEL.gz)
 
 ## file name for normalized dataset
-dataset.fn <- file.path(saveres, "mdacc2_data_frma.RData")
+dataset.fn <- file.path(saveres, "mdacc_2_data_frma.RData")
 
 ########################
 ## global parameters
@@ -83,6 +83,11 @@ badchars <- "[\xb5]|[\n]|[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]
 
 ########################
 ## run analysis scripts
+
+message("\n---------------------------------------\n| Compute cutoff for GGI and PI3KCASIG |\n---------------------------------------")
+source(file.path("fda_mdacc_ggi_cutoff.R"))
+source(file.path("fda_mdacc_pi3kcasig_cutoff.R"))
+message("\t-> DONE")
 
 message("\n-----------------------------------\n| Format and normalize dataset |\n-----------------------------------")
 source(file.path("fda_mdacc_dataset_bhk.R"))
