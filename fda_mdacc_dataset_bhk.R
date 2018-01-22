@@ -87,12 +87,6 @@ if(!file.exists(myfn)) {
   gl <- lapply(data.ge, function (x) { return (featureNames(x)) })
   gl <- intersectList(gl)
   gl <- fData(data.ge[["HG-U133A"]])[gl, , drop=FALSE]
-  data.ge2 <- lapply(data.ge, function (x, y) {
-    exprs(x) <- exprs(x)[rownames(gl), , drop=FALSE]
-    fData(x) <- gl
-    annotation(x) <- "hgu133a"
-    return (x)
-  }, y=gl)
   
   data.ge2 <- lapply(data.ge, function (x, y) {
     x <- x[rownames(gl), ]
@@ -101,14 +95,18 @@ if(!file.exists(myfn)) {
     return (x)
   }, y=gl)
 
-  ## quantile normalization between hgu133a and hgu133plus2
-  tt <- apply(Biobase::exprs(data.ge2[["HG-U133A"]]), 2, sort, method="quick")
-  qnormvec.hgu133a <- apply(tt, 1, median, na.rm=TRUE)
-  ## normalize the data
-  dd <- lapply(data.ge2, function (x, y) {
-    res <- t(normQuant(A=t(exprs(x)), ties=TRUE, normvector=y))
-    return (res)
-  }, y=qnormvec.hgu133a)
+  if (do.qnorm) {
+      ## quantile normalization between hgu133a and hgu133plus2
+      tt <- apply(Biobase::exprs(data.ge2[["HG-U133A"]]), 2, sort, method="quick")
+      qnormvec.hgu133a <- apply(tt, 1, median, na.rm=TRUE)
+      ## normalize the data
+      dd <- lapply(data.ge2, function (x, y) {
+        res <- t(normQuant(A=t(exprs(x)), ties=TRUE, normvector=y))
+        return (res)
+      }, y=qnormvec.hgu133a)
+  } else {
+      dd <- lapply(data.ge2, exprs)
+  }
   dd <- do.call(cbind, dd)
 
   data.ge3 <- CombineExpressionSetList(data.ge2)

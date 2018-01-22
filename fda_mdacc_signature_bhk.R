@@ -273,6 +273,6 @@ names(res.all) <- colnames(res.scores)[-1]
 ## shorten signatures names
 # names(res.all) <- gsub("_MODULE$", "_M", names(res.all))
 
-WriteXLS::WriteXLS("res.all", ExcelFileName=file.path(saveres, "fda_mdacc_signatures.xlsx"))
+WriteXLS::WriteXLS("res.all", ExcelFileName=file.path(saveres, sprintf("fda_mdacc_signatures_%i.xlsx", dataset)))
 
 ## end

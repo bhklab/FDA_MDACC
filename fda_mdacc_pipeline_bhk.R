@@ -11,7 +11,7 @@
 chooseCRANmirror(graphics=FALSE, ind=15)
 
 ## set path to local directory if it is not properly set up
-.libPaths(c("/mnt/work1/users/bhklab/Rlib", .libPaths()))
+# .libPaths(c("/mnt/work1/users/bhklab/Rlib", .libPaths()))
 
 ## load and install libraries
 library(parallel)
@@ -47,13 +47,18 @@ source(file.path("fda_mdacc_foo_bhk.R"))
 saveres <- "output"
 if(!file.exists(saveres)) { dir.create(saveres, showWarnings=FALSE, recursive=TRUE) }
 
+## set to 1 for the first dataset and 2 for the second dataset
+dataset <- 1
 
 ## path to the raw data
-rawpath <- "/mnt/work1/users/bhklab/Data/FDA/MDACC2"
+rawpath <- sprintf("/mnt/work1/users/bhklab/Data/FDA/MDACC%i", dataset)
 ## note that the files have been compressed using gzip (.CEL.gz)
 
 ## file name for normalized dataset
-dataset.fn <- file.path(saveres, "mdacc_2_data_frma.RData")
+dataset.fn <- file.path(saveres, sprintf("mdacc_%i_data_frma.RData", dataset))
+
+## quantile normalization across platform?
+do.qnorm <- FALSE
 
 ########################
 ## global parameters
